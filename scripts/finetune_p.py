@@ -146,6 +146,10 @@ def run(args):
 
     if args.validate_first and 0 not in metrics_history:
         model.eval()
+        print("*" * 50)
+        print("validation_step",type(validation_step))
+        print("epoch",type(epoch))
+        print("*" * 50)
         metrics_history[epoch] = loop(loaders['val'], validation_step, epoch, 'val_')
         checkpoints.save_metrics(metrics_history)
 
@@ -177,7 +181,7 @@ if __name__ == "__main__":
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum in SGD')
     parser.add_argument('--input-size', default=500, type=int, help='images input size')
     parser.add_argument('--input-crop', default='rect', choices=['square', 'rect'], help='crop the input or not')
-    parser.add_argument('--batch-size', default=4, type=int, help='batch size')
+    parser.add_argument('--batch-size', default=2, type=int, help='batch size')
     parser.add_argument('--images-per-class', default=50, type=int,
                         help='use a training subset of N images per class for the finetuning')
     parser.add_argument('--backbone', default='resnet50', choices=backbone_list, help='backbone architecture')

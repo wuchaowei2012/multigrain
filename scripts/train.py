@@ -216,7 +216,7 @@ if __name__ == "__main__":
     parser.add_argument('--gradient-accum', default=1, type=int, help='number of batches in one backward pass')
     parser.add_argument('--repeated-augmentations', default=1, type=int, help='repetitions in repeated augmentations')
     parser.add_argument('--augmentation', default='full', choices=transforms_list, help='augmentation type')
-    parser.add_argument('--epochs', default=120, type=int, help='training epochs')
+    parser.add_argument('--epochs', default=5, type=int, help='training epochs')
     parser.add_argument('--epoch-len-factor', default=2.0, type=float,
                         help='multiplier for epoch size')
     parser.add_argument('--backbone', default='resnet50', choices=backbone_list,
