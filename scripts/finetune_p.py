@@ -24,6 +24,7 @@ from collections import defaultdict, Counter
 from collections import OrderedDict as OD
 tic, toc = utils.Tictoc()
 
+import ipdb
 
 def run(args):
     argstr = yaml.dump(args.__dict__, default_flow_style=False)
@@ -141,16 +142,24 @@ def run(args):
         print(logging.str_metrics(metrics, epoch=epoch, num_epochs=epoch))
         toc()
         if prefix == 'val_':
+            # ipdb.set_trace()
             return OD((k, v.avg) for (k, v) in metrics.items())
         return OD((k, v.hist) for (k, v) in metrics.items())
 
     if args.validate_first and 0 not in metrics_history:
         model.eval()
-        print("*" * 50)
-        print("validation_step",type(validation_step))
-        print("epoch",type(epoch))
-        print("*" * 50)
-        metrics_history[epoch] = loop(loaders['val'], validation_step, epoch, 'val_')
+
+        # print("*" * 50)
+        # print("validation_step",type(validation_step))
+        # print("epoch",type(epoch))
+        # print("*" * 50)
+
+        # ipdb.set_trace()
+
+        # temp = loop(loaders['val'], validation_step, epoch, 'val_')
+        # print("temp " * 50)
+        # print(temp)
+        metrics_history[epoch[0]] = loop(loaders['val'], validation_step, epoch, 'val_')
         checkpoints.save_metrics(metrics_history)
 
     model.eval()  # freeze batch normalization
@@ -159,13 +168,14 @@ def run(args):
 
     if args.validate:
         model.eval()
-        metrics.update(loop(loaders['val'], validation_step, epoch + 1, 'val_'))
+        # ipdb.set_trace()
 
-        metrics_history[epoch + 1] = metrics
+        metrics.update(loop(loaders['val'], validation_step, epoch[0] + 1, 'val_'))
+        metrics_history[epoch[0] + 1] = metrics
 
     if not args.dry:
         utils.make_plots(metrics_history, args.expdir)
-        checkpoints.save(model, epoch + 1, optimizers, metrics_history)
+        checkpoints.save(model, epoch[0] + 1, optimizers, metrics_history)
 
 
 if __name__ == "__main__":
@@ -182,7 +192,7 @@ if __name__ == "__main__":
     parser.add_argument('--input-size', default=500, type=int, help='images input size')
     parser.add_argument('--input-crop', default='rect', choices=['square', 'rect'], help='crop the input or not')
     parser.add_argument('--batch-size', default=2, type=int, help='batch size')
-    parser.add_argument('--images-per-class', default=50, type=int,
+    parser.add_argument('--images-per-class', default=2, type=int,
                         help='use a training subset of N images per class for the finetuning')
     parser.add_argument('--backbone', default='resnet50', choices=backbone_list, help='backbone architecture')
     parser.add_argument('--pretrained-backbone', action='store_const', const='imagenet', help='use pretrained backbone')
