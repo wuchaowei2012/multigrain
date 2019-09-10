@@ -13,9 +13,11 @@ python scripts/whiten.py --expdir experiments/joint_3B_0.5/finetune500_whitened 
 --resume-from experiments/joint_3B_0.5/finetune500 --input-size 500 --whiten-path $WHITEN_PATH
 
 
-# whitening改成 计算 本数据集 
-python scripts/whiten.py --expdir experiments/joint_3B_0.5/finetune500_whitened \
---resume-from experiments/joint_3B_0.5/finetune500 --input-size 500 --whiten-path $IMAGENET_PATH
+# whitening改成 计算 本数据集
+export PYTHONPATH=/usr/local/anaconda3/bin/
+
+$PYTHONPATH/python3 scripts/whiten.py --expdir experiments/joint_3B_0.5/finetune500_whitened \
+--resume-from experiments/joint_3B_0.5/finetune500_whitened --input-size 500 --whiten-path $IMAGENET_PATH/whiten
 
 
 

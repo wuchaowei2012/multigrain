@@ -205,7 +205,7 @@ if __name__ == "__main__":
     parser.add_argument('--imagenet-path', default='data/ilsvrc2012', help='ImageNet data root')
     parser.add_argument('--preload-dir-imagenet', default=None,
                         help='preload imagenet in this directory (useful for slow networks')
-    parser.add_argument('--workers', default=20, type=int, help='number of data-fetching workers')
+    parser.add_argument('--workers', default=4, type=int, help='number of data-fetching workers')
     parser.add_argument('--dry', action='store_true', help='do not store anything')
 
     args = parser.parse_args()
