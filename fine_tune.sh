@@ -24,22 +24,19 @@ $PYTHONPATH/python3 scripts/whiten.py --expdir experiments/joint_3B_0.5/finetune
 # Classification results
 # Evaluate a network on ImageNet-val is straightforward using options from evaluate.py. For instance the following command:
 
+
+
 python scripts/evaluate.py --expdir experiments/joint_3B_0.5/eval_p4_500 \
 --imagenet-path $IMAGENET_PATH --input-size 500 --dataset imagenet-val \
 --pooling-exponent 4 --resume-from joint_3B_0.5.pth
 
 
+export IMAGENET_PATH=/home/meizi/long_video_pic
+python3 scripts/extract_scriptor.py --expdir experiments/joint_3B_0.5/eval_p4_500 \
+--imagenet-path $IMAGENET_PATH --input-size 500 --dataset imagenet-val \
+--pooling-exponent 4 --resume-from joint_3B_0.5.pth --dataset =
 
 
-import os
-index = 1
-for f in os.listdir():
-    temp = f.split('_')[-1].split('.')[0]
-    print(temp.rjust(8, '0'))
-    #os.rename(f, "ILSVRC2012_train_"+temp.rjust(8, '0')+'.JPEG')
-    os.rename(f, "ILSVRC2012_train_"+str(index).rjust(8, '0')+'.JPEG')
-
-    index = index + 1
 
 
 
