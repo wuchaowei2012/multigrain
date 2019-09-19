@@ -127,8 +127,7 @@ def run(args):
 
 if __name__ == "__main__":
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--dataset', choices=['imagenet-val', 'imagenet-trainaug', 'holidays', 'copydays', 'ukbench', 'meizi'])
-                        default='imagenet-val', help='which evaluation to make')
+    parser.add_argument('--dataset', choices=['imagenet-val', 'imagenet-trainaug', 'holidays', 'copydays', 'ukbench', 'meizi'],  default='imagenet-val', help='which evaluation to make')
     parser.add_argument('--shuffle', action='store_true', help='shuffle dataset before evaluation')
     parser.add_argument('--expdir', default='experiments/resnet50/finetune500_whitened/holidays500',
                         help='evaluation destination directory')
