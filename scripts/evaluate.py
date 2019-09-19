@@ -88,7 +88,8 @@ def run(args):
             metrics["val_top1"].update(top1, n=len(batch['input']))
             metrics["val_top5"].update(top5, n=len(batch['input']))
         elif mode == "retrieval":
-            if index is None: index = faiss.IndexFlatL2(descriptors.size(1))
+            if index is None:
+                index = faiss.IndexFlatL2(descriptors.size(1))
             descriptors = output_dict['normalized_embedding']
             for e in descriptors.cpu():
                 index.append(e)

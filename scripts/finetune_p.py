@@ -22,9 +22,11 @@ import yaml
 import os.path as osp
 from collections import defaultdict, Counter
 from collections import OrderedDict as OD
+
 tic, toc = utils.Tictoc()
 
 import ipdb
+
 
 def run(args):
     argstr = yaml.dump(args.__dict__, default_flow_style=False)
@@ -46,7 +48,8 @@ def run(args):
         utils.ifmakedirs(args.expdir)
         logging.print_file(argstr, argfile)
 
-    transforms = get_transforms(IN1K, args.input_size, crop=(args.input_crop == 'square'), need=('val',), backbone=args.backbone)
+    transforms = get_transforms(IN1K, args.input_size, crop=(args.input_crop == 'square'), need=('val',),
+                                backbone=args.backbone)
     datas = {}
     for split in ('train', 'val'):
         datas[split] = IdDataset(IN1K(args.imagenet_path, split, transform=transforms['val']))
@@ -54,13 +57,15 @@ def run(args):
     collate_fn = dict(collate_fn=list_collate) if args.input_crop == 'rect' else {}
     selected = []
     count = Counter()
+
+    # following code: extract args.images_per_class pictures per class in training dataset
     for i, label in enumerate(datas['train'].dataset.labels):
         if count[label] < args.images_per_class:
             selected.append(i)
             count[label] += 1
     datas['train'].dataset = Subset(datas['train'].dataset, selected)
     loaders['train'] = DataLoader(datas['train'], batch_size=args.batch_size, shuffle=True,
-                                num_workers=args.workers, pin_memory=True, **collate_fn)
+                                  num_workers=args.workers, pin_memory=True, **collate_fn)
     loaders['val'] = DataLoader(datas['val'], batch_size=args.batch_size, shuffle=args.shuffle_val,
                                 num_workers=args.workers, pin_memory=True, **collate_fn)
 
@@ -74,6 +79,8 @@ def run(args):
 
     optimizers = OD()
     p = model.pool.p
+
+    # SGD(self, params, lr=required, momentum=0, dampening=0, weight_decay=0, nesterov=False)
     optimizers['p'] = SGD([p], lr=args.learning_rate, momentum=args.momentum)
     optimizers = MultiOptim(optimizers)
 
@@ -113,7 +120,7 @@ def run(args):
 
     if checkpoints.exists(args.resume_epoch, args.resume_from):
         epoch = checkpoints.resume(model, metrics_history=metrics_history,
-                           resume_epoch=args.resume_epoch, resume_from=args.resume_from)
+                                   resume_epoch=args.resume_epoch, resume_from=args.resume_from)
     else:
         raise ValueError('Checkpoint ' + args.resume_from + ' not found')
 
@@ -132,10 +139,12 @@ def run(args):
                 optimizers['p'].param_groups[0]['lr'] = lr
             if args.cuda:
                 batch = utils.cuda(batch)
-            data_time = 1000 * toc(); tic()
+            data_time = 1000 * toc();
+            tic()
             step_metrics = step(batch)
             step_metrics['data_time'] = data_time
-            step_metrics['batch_time'] = 1000 * toc(); tic()
+            step_metrics['batch_time'] = 1000 * toc();
+            tic()
             for (k, v) in step_metrics.items():
                 metrics[prefix + k].update(v, len(batch['input']))
             print(logging.str_metrics(metrics, iter=i, num_iters=len(loader), epoch=epoch, num_epochs=epoch))
@@ -149,16 +158,6 @@ def run(args):
     if args.validate_first and 0 not in metrics_history:
         model.eval()
 
-        # print("*" * 50)
-        # print("validation_step",type(validation_step))
-        # print("epoch",type(epoch))
-        # print("*" * 50)
-
-        # ipdb.set_trace()
-
-        # temp = loop(loaders['val'], validation_step, epoch, 'val_')
-        # print("temp " * 50)
-        # print(temp)
         metrics_history[epoch[0]] = loop(loaders['val'], validation_step, epoch, 'val_')
         checkpoints.save_metrics(metrics_history)
 
@@ -187,7 +186,8 @@ if __name__ == "__main__":
     parser.add_argument('--resume-epoch', default=-1, type=int, help='resume epoch (-1: last, 0: from scratch)')
     parser.add_argument('--resume-from', default=None, help='resume checkpoint file/folder')
     parser.add_argument('--learning-rate', default=0.005, type=float, help='base learning rate')
-    parser.add_argument('--learning-rate-decay-power', default=0.9, type=float, help='Power in polynomial learning rate decay')
+    parser.add_argument('--learning-rate-decay-power', default=0.9, type=float,
+                        help='Power in polynomial learning rate decay')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum in SGD')
     parser.add_argument('--input-size', default=500, type=int, help='images input size')
     parser.add_argument('--input-crop', default='rect', choices=['square', 'rect'], help='crop the input or not')

@@ -17,6 +17,7 @@ from collections import OrderedDict as OD
 from collections import defaultdict
 import yaml
 import os.path as osp
+
 tic, toc = utils.Tictoc()
 
 
@@ -34,7 +35,8 @@ def run(args):
         logging.print_file(argstr, argfile)
 
     collate_fn = dict(collate_fn=list_collate) if args.input_crop == 'rect' else {}
-    transforms = get_transforms(input_size=args.input_size, crop=(args.input_crop == 'square'), need=('val',), backbone=args.backbone)
+    transforms = get_transforms(input_size=args.input_size, crop=(args.input_crop == 'square'), need=('val',),
+                                backbone=args.backbone)
 
     if args.dataset.startswith('imagenet'):
         dataset = IdDataset(IN1K(args.imagenet_path,
@@ -44,8 +46,8 @@ def run(args):
     else:
 
         dataset = IdDataset(meizi_dataset(args.imagenet_path,
-                                 args.dataset[len('imagenet-'):],
-                                 transform=transforms['val']))
+                                          args.dataset[len('imagenet-'):],
+                                          transform=transforms['val']))
         mode = "retrieval"
         print('test if dataset is all right', dataset)
         # raise NotImplementedError("Retrieval evaluations not implemented yet, check datasets/retrieval.py to implement the evaluations.")
@@ -60,7 +62,8 @@ def run(args):
     checkpoints = utils.CheckpointHandler(args.expdir)
 
     if checkpoints.exists(args.resume_epoch, args.resume_from):
-        epoch = checkpoints.resume(model, resume_epoch=args.resume_epoch, resume_from=args.resume_from, return_extra=False)
+        epoch = checkpoints.resume(model, resume_epoch=args.resume_epoch, resume_from=args.resume_from,
+                                   return_extra=False)
     else:
         raise ValueError('Checkpoint ' + args.resume_from + ' not found')
 
@@ -87,22 +90,28 @@ def run(args):
         with torch.no_grad():
             if args.cuda:
                 batch = utils.cuda(batch)
-            metrics["data_time"].update(1000 * toc()); tic()
+            metrics["data_time"].update(1000 * toc());
+            tic()
             output_dict = model(batch['input'])
 
-
-
         if mode == "classification":
-            target = batch['classifier_target']
-            top1, top5 = utils.accuracy(output_dict['classifier_output'], target, topk=(1, 5))
-            metrics["val_top1"].update(top1, n=len(batch['input']))
-            metrics["val_top5"].update(top5, n=len(batch['input']))
+            # target = batch['classifier_target']
+            # top1, top5 = utils.accuracy(output_dict['classifier_output'], target, topk=(1, 5))
+            # metrics["val_top1"].update(top1, n=len(batch['input']))
+            # metrics["val_top5"].update(top5, n=len(batch['input']))
+            raise ValueError('only focus on classification')
         elif mode == "retrieval":
-            if index is None: index = faiss.IndexFlatL2(descriptors.size(1))
+            if index is None:
+                index = faiss.IndexFlatL2(descriptors.size(1))
+                print("type of index \t", type(index))
+
             descriptors = output_dict['normalized_embedding']
+            print("type of descriptors \t", type(descriptors))
+
             for e in descriptors.cpu():
                 index.append(e)
-        metrics["batch_time"].update(1000 * toc()); tic()
+        metrics["batch_time"].update(1000 * toc());
+        tic()
         print(logging.str_metrics(metrics, iter=i, num_iters=len(loader), epoch=epoch, num_epochs=epoch))
     print(logging.str_metrics(metrics, epoch=epoch, num_epochs=1))
     for k in metrics: metrics[k] = metrics[k].avg
@@ -117,7 +126,8 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', choices=['imagenet-val', 'imagenet-trainaug', 'holidays', 'copydays', 'ukbench'],
                         default='imagenet-val', help='which evaluation to make')
     parser.add_argument('--shuffle', action='store_true', help='shuffle dataset before evaluation')
-    parser.add_argument('--expdir', default='experiments/resnet50/finetune500_whitened/holidays500', help='evaluation destination directory')
+    parser.add_argument('--expdir', default='experiments/resnet50/finetune500_whitened/holidays500',
+                        help='evaluation destination directory')
     parser.add_argument('--resume-epoch', default=-1, type=int, help='resume epoch (-1: last, 0: from scratch)')
     parser.add_argument('--resume-from', default=None, help='resume checkpoint file/folder')
     parser.add_argument('--input-size', default=500, type=int, help='images input size')
@@ -127,17 +137,17 @@ if __name__ == "__main__":
     parser.add_argument('--pretrained-backbone', action='store_const', const='imagenet', help='use pretrained backbone')
     parser.add_argument('--pooling-exponent', default=None, type=float,
                         help='pooling exponent in GeM pooling (default: use value from checkpoint)')
-    parser.add_argument('--no-cuda', action='store_true', help='do not use CUDA')
-    parser.add_argument('--imagenet-path', default='data/ilsvrc2012', help='ImageNet data root')
-    parser.add_argument('--holidays-path', default='data/Holidays', help='INRIA Holidays data root')
-    parser.add_argument('--UKBench-path', default='data/UKBench', help='UKBench data root')
-    parser.add_argument('--copydays-path', default='data/Copydays', help='INRIA Copydays data root')
+    parser.add_argument('--no-cuda', action='store_true', help='do not use CUDA', default=False)
+    parser.add_argument('--imagenet-path', default='/home/data/ilsvrc2012', help='ImageNet data root')
+    parser.add_argument('--holidays-path', default='/home/data/Holidays', help='INRIA Holidays data root')
+    parser.add_argument('--UKBench-path', default='/home/data/UKBench', help='UKBench data root')
+    parser.add_argument('--copydays-path', default='/home/data/Copydays', help='INRIA Copydays data root')
     parser.add_argument('--distractors-list', default='data/distractors.txt', help='list of distractor images')
     parser.add_argument('--distractors-path', default='data/distractors', help='path to distractor images')
     parser.add_argument('--num_distractors', default=0, type=int, help='number of distractor images.')
     parser.add_argument('--preload-dir-imagenet', default=None,
                         help='preload imagenet in this directory (useful for slow networks')
-    parser.add_argument('--workers', default=20, type=int, help='number of data-fetching workers')
+    parser.add_argument('--workers', default=5, type=int, help='number of data-fetching workers')
     parser.add_argument('--dry', action='store_true', help='do not store anything')
 
     args = parser.parse_args()

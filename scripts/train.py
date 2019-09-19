@@ -51,8 +51,7 @@ def run(args):
         imload = preloader(args.imagenet_path, args.preload_dir_imagenet) if args.preload_dir_imagenet else default_loader
         datas[split] = IdDataset(IN1K(args.imagenet_path, split, transform=transforms[split], loader=imload))
     loaders = {}
-    loaders['train'] = DataLoader(datas['train'],
-                       batch_sampler=RASampler(len(datas['train']), args.batch_size, args.repeated_augmentations,
+    loaders['train'] = DataLoader(datas['train'], batch_sampler=RASampler(len(datas['train']), args.batch_size, args.repeated_augmentations,
                                                args.epoch_len_factor, shuffle=True, drop_last=False),
                        num_workers=args.workers, pin_memory=True)
     loaders['val'] = DataLoader(datas['val'], batch_size=args.batch_size, shuffle=args.shuffle_val,
