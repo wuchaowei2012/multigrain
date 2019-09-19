@@ -18,10 +18,14 @@ from collections import defaultdict
 import yaml
 import os.path as osp
 
+import ipdb
+
 tic, toc = utils.Tictoc()
 
 
 def run(args):
+    ipdb.set_trace()
+
     argstr = yaml.dump(args.__dict__, default_flow_style=False)
     print('arguments:')
     print(argstr)
