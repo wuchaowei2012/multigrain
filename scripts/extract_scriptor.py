@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 import faiss
-import impb
+# import impb
 import set_path
 from multigrain.utils import logging
 from multigrain.augmentations import get_transforms
