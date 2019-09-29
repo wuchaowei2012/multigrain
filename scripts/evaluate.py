@@ -32,6 +32,7 @@ def run(args):
         logging.print_file(argstr, argfile)
 
     collate_fn = dict(collate_fn=list_collate) if args.input_crop == 'rect' else {}
+
     transforms = get_transforms(input_size=args.input_size, crop=(args.input_crop == 'square'), need=('val',), backbone=args.backbone)
 
     if args.dataset.startswith('imagenet'):
@@ -42,10 +43,8 @@ def run(args):
     else:
         raise NotImplementedError("Retrieval evaluations not implemented yet, check datasets/retrieval.py to implement the evaluations.")
 
-
     loader = DataLoader(dataset, batch_size=args.batch_size, num_workers=args.workers, shuffle=args.shuffle,
                         pin_memory=True, **collate_fn)
-
     model = get_multigrain(args.backbone, include_sampling=False, pretrained_backbone=args.pretrained_backbone)
 
     p = model.pool.p
@@ -61,13 +60,12 @@ def run(args):
         p.data.fill_(args.pooling_exponent)
 
     print("Multigrain model with {} backbone and p={} pooling:".format(args.backbone, p.item()))
-    print(model)
+    # print(model)
 
     if args.cuda:
         model = utils.cuda(model)
 
     model.eval()  # freeze batch normalization
-
     print("Evaluating", args.dataset)
 
     metrics_history = OD()
