@@ -19,6 +19,9 @@ import numpy as np
 from .loader import loader as default_loader
 from multigrain.utils import ifmakedirs
 
+import ipdb
+from .ImageFolderWithPaths import ImageFolderWithPaths
+
 
 class meizi_dataset(data.Dataset):
     """
@@ -37,66 +40,66 @@ class meizi_dataset(data.Dataset):
         [-0.5836, -0.6948,  0.4203]
     ])
 
-    def __init__(self, root, split='train', transform=None, force_reindex=False, loader=default_loader):
+    def __init__(self, root, transform=None, force_reindex=False, loader=default_loader):
         self.root = root
         self.transform = transform
-        self.split = split
-        cachefile = 'data/NONIN1K-' + split + '-cached-list.pth'
+        cachefile = 'data/NONIN1K' + '_cached-list.pth'
         self.classes, self.class_to_idx, self.imgs, self.labels, self.images_subdir = self.get_dataset(cachefile, force_reindex)
         self.loader = loader
 
-    def get_dataset(self, cachefile=None, force_reindex=False):
-        if osp.isfile(cachefile) and not force_reindex:
-            print('Loaded IN1K {} dataset from cache: {}...'.format(self.split, cachefile))
-            return torch.load(cachefile)
+    def get_dataset(self, cachefile=None, force_reindex=False): 
+        
+        # if osp.isfile(cachefile) and not force_reindex:
+        #     print('Loaded IN1K  dataset from cache: {}...'.format(cachefile))
+        #     return torch.load(cachefile)
 
-        print('Indexing IN1K {} dataset...'.format(self.split), end=' ')
+        print('Indexing meizi dataset...')
 
-        # 计算求得 train或 val 数据的根目录
-        # for images_subdir in [self.split, 'ILSVRC2012_img_' + self.split]:
-        #     if osp.isdir(osp.join(self.root, images_subdir)):
-        #         break
-        # else:
-        #     raise ValueError('Split {} not found'.format(self.split))
-        #
-        # self.images_subdir = images_subdir
-
-        # subfiles = os.listdir(osp.join(self.root, images_subdir))
-
-        images_subdir = "/devdata/videos/long_video_pic"
-        self.images_subdir = images_subdir
-
+        # images_subdir = "/home/Code/Code/multigrain/data/long_video_pic"
+        images_subdir = "/home/meizi/short_video_pic"
+        
         subfiles = os.listdir(images_subdir)
 
         if osp.isdir(osp.join(self.root, images_subdir, subfiles[0])):  # ImageFolder
-            classes = [folder for folder in subfiles if folder.startswith('23')]
+            classes = [folder for folder in subfiles if folder.startswith('32')]
             classes.sort()
+            print(classes)
             class_to_idx = {c: i for (i, c) in enumerate(classes)}
             imgs = []
             labels = []
             for label in classes:
                 label_images = os.listdir(osp.join(self.root, images_subdir, label))
+                label_images = [img for img in label_images if img.endswith('.jpg')]
+
                 label_images.sort()
                 imgs.extend([osp.join(label, i) for i in label_images])
                 labels.extend([class_to_idx[label] for _ in label_images])
 
-        print('OK!', end='')
+        print('OK!')
+
+        #meizi dataset
         returns = (classes, class_to_idx, imgs, labels, images_subdir)
         if cachefile is not None:
             ifmakedirs(osp.dirname(cachefile))
             torch.save(returns, cachefile)
-            print(' cached to', cachefile)
-        print()
+            print('cached to', cachefile)
+
         return returns
         
     def __getitem__(self, idx):
         image = self.loader(osp.join(self.root, self.images_subdir, self.imgs[idx]))
         if self.transform is not None:
             image = self.transform(image)
-        return (image, self.labels[idx])
+
+        file_info = self.imgs[idx].split('/')
+        vid = file_info[0]
+
+        frame_id = (file_info[1].split('_')[-1]).split('.')[0]
+
+        return (image, self.labels[idx],  int(vid), int(frame_id)) 
     
     def __len__(self):
         return len(self.imgs)
     
     def __repr__(self):
-        return "IN1K(root='{}', split='{}')".format(self.root, self.split)
+        return "IN1K(root='{}')".format(self.root)

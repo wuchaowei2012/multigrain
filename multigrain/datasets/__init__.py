@@ -4,3 +4,4 @@ from .loader import loader as default_loader
 from .loader import preloader
 from .list_dataset import ListDataset
 
+from .ImageFolderWithPaths import ImageFolderWithPaths

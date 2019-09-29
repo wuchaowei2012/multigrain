@@ -3,7 +3,7 @@
 #
 # This source code is licensed under the CC-by-NC license found in the
 # LICENSE file in the root directory of this source tree.
-#
+
 from shutil import copyfile
 import os.path as osp
 from PIL import Image
@@ -11,10 +11,19 @@ from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 from multigrain.utils import ifmakedirs
 
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 
 def loader(path):
-    return Image.open(path).convert('RGB')
-
+    try:
+        img =Image.open(path).convert('RGB')
+        
+        if img is None:
+            print(path)
+        return img
+    except:
+        print(path)
+        return None
 
 def preloader(dataset_root, preload_dir):
     def this_loader(path):

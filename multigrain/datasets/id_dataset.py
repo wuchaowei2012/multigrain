@@ -6,6 +6,8 @@
 #
 import torch.utils.data as data
 
+from .meizi_dataset import meizi_dataset
+import ipdb
 
 class IdDataset(data.Dataset):
     """
@@ -18,8 +20,12 @@ class IdDataset(data.Dataset):
     def __getitem__(self, index):
         returns = self.dataset[index]
         return_dict = {}
+
         if not isinstance(returns, dict):
-            return_dict['input'], return_dict['classifier_target'] = returns
+            # print("returns length", "\t", len(returns))
+
+            # print("file_name \t", file_name)
+            return_dict['input'], return_dict['classifier_target'], return_dict['vid'], return_dict['frame_id'] = returns
         return_dict['instance_target'] = index
         return return_dict
 

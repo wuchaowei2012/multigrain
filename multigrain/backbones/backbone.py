@@ -15,6 +15,7 @@ from .nasnet_mobile import nasnetamobile
 from collections import OrderedDict as OD
 from multigrain.modules.layers import Layer
 # torch.utils.checkpoint.preserve_rng_state=False
+# import ipdb
 
 
 backbone_list = ['resnet18', 'resnet50', 'resnet101', 'resnet152', 'senet154', 'pnasnet5large', 'nasnetamobile']
@@ -62,13 +63,20 @@ class BackBone(nn.Module):
 
     def forward(self, input):
         output = {}
+        # ipdb.set_trace()
+
         if isinstance(input, list):
             # for lists of tensors of unequal input size
             features = map(self.features, [i.unsqueeze(0) for i in input])
+            # print(features.size())
+            # print(input.size())
             embedding = torch.cat([self.pool(f) for f in features], 0)
         else:
             features = self.features(input)
             embedding = self.pool(features)
+
+
+
         if self.whitening is not None:
             embedding = self.whitening(embedding)
 
