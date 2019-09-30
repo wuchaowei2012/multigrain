@@ -127,11 +127,11 @@ def run(args):
     xb = MmapVectorUtils.Open(args.embeddingFilePath, True, shape=(imageCount, Dim + 2))
 
     for i, batch in enumerate(loader):
-        try:
-            batch_vid = batch['vid']
-            batch_fid = batch['frame_id']
-        except:
-            continue
+        #try:
+        batch_vid = batch['vid']
+        batch_fid = batch['frame_id']
+        #except:
+        #    continue
 
         with torch.no_grad():
             #if args.cuda:
@@ -139,10 +139,10 @@ def run(args):
                 batch = utils.cuda(batch)
             metrics["data_time"].update(1000 * toc());
             tic()
-            try:
-                output_dict = model(batch['input'])
-            except:
-                continue
+            #try:
+            output_dict = model(batch['input'])
+            #except:
+            #    continue
 
         if mode == "classification":
             # target = batch['classifier_target']
@@ -163,6 +163,8 @@ def run(args):
             
             xb[start_id:end_id, 0:1] = np.array(batch_vid).reshape(n,1)
             xb[start_id:end_id, 1:2] = np.array(batch_fid).reshape(n,1)
+
+            print(xb[start_id:end_id, 0:2])
 
             xb[start_id:end_id, 2:] = descriptors[0:n].cpu().numpy()
 
@@ -209,13 +211,9 @@ if __name__ == "__main__":
                         help='preload imagenet in this directory (useful for slow networks')
     parser.add_argument('--workers', default=10, type=int, help='number of data-fetching workers')
     parser.add_argument('--dry', action='store_true', help='do not store anything')
-    parser.add_argument('--embeddingFilePath', default='/home/meizi/short32_125_0.5m.txt', help='embedding file'
+    parser.add_argument('--embeddingFilePath', default='/home/meizi/short4_125.txt', help='embedding file'
     )
     
     args = parser.parse_args()
     run(args)
-
-
-
-
 
