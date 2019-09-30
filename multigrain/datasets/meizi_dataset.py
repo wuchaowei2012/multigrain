@@ -57,11 +57,12 @@ class meizi_dataset(data.Dataset):
 
         # images_subdir = "/home/Code/Code/multigrain/data/long_video_pic"
         images_subdir = "/home/meizi/short_video_pic"
+        #images_subdir = "/home/meizi/long_video_pic"
         
         subfiles = os.listdir(images_subdir)
 
         if osp.isdir(osp.join(self.root, images_subdir, subfiles[0])):  # ImageFolder
-            classes = [folder for folder in subfiles if folder.startswith('32')]
+            classes = [folder for folder in subfiles if folder.startswith('4')]
             classes.sort()
             print(classes)
             class_to_idx = {c: i for (i, c) in enumerate(classes)}
