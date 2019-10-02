@@ -40,8 +40,9 @@ class meizi_dataset(data.Dataset):
         [-0.5836, -0.6948,  0.4203]
     ])
 
-    def __init__(self, root, transform=None, force_reindex=False, loader=default_loader):
+    def __init__(self, root, transform=None, force_reindex=False, loader=default_loader, starts='7'):
         self.root = root
+        self.starts = starts
         self.transform = transform
         cachefile = 'data/NONIN1K' + '_cached-list.pth'
         self.classes, self.class_to_idx, self.imgs, self.labels, self.images_subdir = self.get_dataset(cachefile, force_reindex)
@@ -49,20 +50,17 @@ class meizi_dataset(data.Dataset):
 
     def get_dataset(self, cachefile=None, force_reindex=False): 
         
-        # if osp.isfile(cachefile) and not force_reindex:
-        #     print('Loaded IN1K  dataset from cache: {}...'.format(cachefile))
-        #     return torch.load(cachefile)
-
         print('Indexing meizi dataset...')
 
-        # images_subdir = "/home/Code/Code/multigrain/data/long_video_pic"
         images_subdir = "/home/meizi/short_video_pic"
         #images_subdir = "/home/meizi/long_video_pic"
         
         subfiles = os.listdir(images_subdir)
 
         if osp.isdir(osp.join(self.root, images_subdir, subfiles[0])):  # ImageFolder
-            classes = [folder for folder in subfiles if folder.startswith('4')]
+            # self.starts is used for select subset images
+            print(self.starts)
+            classes = [folder for folder in subfiles if folder.startswith(self.starts)]
             classes.sort()
             print(classes)
             class_to_idx = {c: i for (i, c) in enumerate(classes)}
@@ -76,9 +74,6 @@ class meizi_dataset(data.Dataset):
                 imgs.extend([osp.join(label, i) for i in label_images])
                 labels.extend([class_to_idx[label] for _ in label_images])
 
-        print('OK!')
-
-        #meizi dataset
         returns = (classes, class_to_idx, imgs, labels, images_subdir)
         if cachefile is not None:
             ifmakedirs(osp.dirname(cachefile))
@@ -94,7 +89,6 @@ class meizi_dataset(data.Dataset):
 
         file_info = self.imgs[idx].split('/')
         vid = file_info[0]
-
         frame_id = (file_info[1].split('_')[-1]).split('.')[0]
 
         return (image, self.labels[idx],  int(vid), int(frame_id)) 

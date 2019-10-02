@@ -4,7 +4,6 @@ import faiss
 
 import json
 
-# import impb
 import set_path
 from multigrain.utils import logging
 from multigrain.augmentations import get_transforms
@@ -28,6 +27,8 @@ import numpy as np
 
 import torch.nn as nn
 from torch.utils.data._utils.collate import default_collate
+
+import ipdb
 
 tic, toc = utils.Tictoc()
 
@@ -61,13 +62,11 @@ def my_collate(batch):
 
 def run(args):
     argstr = yaml.dump(args.__dict__, default_flow_style=False)
-    print('arguments:')
     print(argstr)
 
     argfile = osp.join(osp.join(args.expdir), 'evaluate_args.yaml')
 
     args.cuda = not args.no_cuda
-    #args.cuda = True
 
     if not args.dry:
         utils.ifmakedirs(args.expdir)
@@ -84,6 +83,8 @@ def run(args):
                                  transform=transforms['val']))
         mode = "classification"
     else:
+
+        
         dataset = IdDataset(meizi_dataset(root=args.meizi_path, transform=transforms['val']))
         mode = "retrieval"
 
@@ -106,11 +107,11 @@ def run(args):
     print("Multigrain model with {} backbone and p={} pooling:".format(args.backbone, p.item()))
     print(model)
 
-    # if torch.cuda.device_count() > 1:
     if True:
-        # print("multiple gpu")
         model = utils.cuda(model)
 
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model.to(device)
     model.eval()  # freeze batch normalization
 
     metrics_history = OD()
@@ -127,22 +128,19 @@ def run(args):
     xb = MmapVectorUtils.Open(args.embeddingFilePath, True, shape=(imageCount, Dim + 2))
 
     for i, batch in enumerate(loader):
+        # ipdb.set_trace()
         #try:
         batch_vid = batch['vid']
         batch_fid = batch['frame_id']
-        #except:
-        #    continue
 
         with torch.no_grad():
             #if args.cuda:
             if True:
                 batch = utils.cuda(batch)
+
             metrics["data_time"].update(1000 * toc());
             tic()
-            #try:
             output_dict = model(batch['input'])
-            #except:
-            #    continue
 
         if mode == "classification":
             # target = batch['classifier_target']
@@ -152,11 +150,9 @@ def run(args):
             raise ValueError('only focus on retrival')
 
         elif mode == "retrieval":
-            # ipdb.set_trace()
             descriptors = output_dict['normalized_embedding']
 
             n, dim = descriptors.shape
-            print("embedding shape: ", n, dim)
             end_id = n + start_id
             end_id = min(imageCount, end_id)
             n = end_id - start_id
@@ -164,12 +160,9 @@ def run(args):
             xb[start_id:end_id, 0:1] = np.array(batch_vid).reshape(n,1)
             xb[start_id:end_id, 1:2] = np.array(batch_fid).reshape(n,1)
 
-            print(xb[start_id:end_id, 0:2])
-
             xb[start_id:end_id, 2:] = descriptors[0:n].cpu().numpy()
 
             start_id += n
-
         metrics["batch_time"].update(1000 * toc());
         tic()
         print(logging.str_metrics(metrics, iter=i, num_iters=len(loader), epoch=epoch, num_epochs=epoch))
@@ -211,9 +204,8 @@ if __name__ == "__main__":
                         help='preload imagenet in this directory (useful for slow networks')
     parser.add_argument('--workers', default=10, type=int, help='number of data-fetching workers')
     parser.add_argument('--dry', action='store_true', help='do not store anything')
-    parser.add_argument('--embeddingFilePath', default='/home/meizi/short4_125.txt', help='embedding file'
-    )
+    parser.add_argument('--embeddingFilePath', default='/home/meizi/short1_125.txt', help='embedding file')
+    parser.add_argument('--starts', default='1', help='dataset filtering')
     
     args = parser.parse_args()
     run(args)
-
