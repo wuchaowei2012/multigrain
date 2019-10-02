@@ -40,7 +40,7 @@ class meizi_dataset(data.Dataset):
         [-0.5836, -0.6948,  0.4203]
     ])
 
-    def __init__(self, root, transform=None, force_reindex=False, loader=default_loader, starts='7'):
+    def __init__(self, root, transform=None, force_reindex=False, loader=default_loader, starts='1'):
         self.root = root
         self.starts = starts
         self.transform = transform
