@@ -134,10 +134,6 @@ for m in range(vid_short_all_total.shape[0] // step):
 
         print("success", long_path_a)
         print("success", short_path_a)
-        #except:
-        #    print("error long_path_a \t", long_path_a)
-        #    print("error short_path_a \t", short_path_a)
-        #    continue
 
     print('-' * 50)
     print(match_rst)
