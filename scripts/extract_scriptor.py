@@ -191,6 +191,7 @@ if __name__ == "__main__":
                         help='pooling exponent in GeM pooling (default: use value from checkpoint)')
     parser.add_argument('--no-cuda', action='store_true', help='do not use CUDA', default=False)
     parser.add_argument('--imagenet-path', default='/home/data/ilsvrc2012', help='ImageNet data root')
+    ##################################################################################################
     parser.add_argument('--meizi-path', default='/home/meizi/long_video_pic', help='meizi data root')
     parser.add_argument('--holidays-path', default='/home/data/Holidays', help='INRIA Holidays data root')
     parser.add_argument('--UKBench-path', default='/home/data/UKBench', help='UKBench data root')
@@ -200,7 +201,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_distractors', default=0, type=int, help='number of distractor images.')
     parser.add_argument('--preload-dir-imagenet', default=None,
                         help='preload imagenet in this directory (useful for slow networks')
-    parser.add_argument('--workers', default=0, type=int, help='number of data-fetching workers')
+    parser.add_argument('--workers', default=20, type=int, help='number of data-fetching workers')
     parser.add_argument('--dry', action='store_true', help='do not store anything')
     parser.add_argument('--embeddingFilePath', default='/home/meizi/short1_125.txt', help='embedding file')
     parser.add_argument('--starts', default='1', help='dataset filtering')

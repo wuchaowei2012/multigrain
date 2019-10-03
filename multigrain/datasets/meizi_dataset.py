@@ -49,11 +49,9 @@ class meizi_dataset(data.Dataset):
         self.loader = loader
 
     def get_dataset(self, cachefile=None, force_reindex=False): 
-        
-        print('Indexing meizi dataset...')
-
-        images_subdir = "/home/meizi/short_video_pic"
-        #images_subdir = "/home/meizi/long_video_pic"
+        # images_subdir = "/home/meizi/short_video_pic"
+        images_subdir = self.root
+        print('Indexing dataset \t', images_subdir)
         
         subfiles = os.listdir(images_subdir)
 
