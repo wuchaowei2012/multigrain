@@ -27,20 +27,15 @@ class MmapVectorUtils:
 
 
 def extract_embd(str_path):
-    vid_embedding = np.memmap(str_path, dtype='float32', mode='r', shape=None)
+    vid_embedding = np.memmap(str_path, dtype='float16', mode='r', shape=None)
+    # vid_embedding = np.memmap(str_path, dtype='float32', mode='r', shape=None)
     vid_embedding = vid_embedding.reshape(-1, 2050)
+    print("\t---- total rows: \t", vid_embedding.shape[0])
     
-    temp = vid_embedding[vid_embedding[:,0] != 0]
-    print("\t---- total rows: \t", temp.shape[0])
-    # print("\t---- valid rows: \t", temp.shape[0])
-    return temp
+    vid_embedding = vid_embedding[vid_embedding[:,0] != 0]
+    print("\t---- valid rows: \t", vid_embedding.shape[0])
+    return vid_embedding
 
-# def delete_none(vid_tensor, str_file):
-#     str_file = os.path.join(embedding_dir, str_file)
-#     temp = vid_tensor[vid_tensor[:,0]!=0]
-
-#     xb = MmapVectorUtils.Open(str_file, True, shape=temp.shape)
-#     xb = temp
 
 ########################## 更改代码处 ##########################
 
@@ -53,18 +48,17 @@ def extract_embd(str_path):
 
 
 def create_indexing(data_root="/devdata/videos", long_vid_nm='long_s6_h125.txt'):
-    print("creating indexing ...")
     global gpu_index
     ####################################################
     print("long video preprocessing: \t")
     vid_long_all = extract_embd(osp.join(data_root, long_vid_nm))
     vid_long = np.ascontiguousarray(vid_long_all[:, 2:])
-    print("valid long embedding file\t", vid_long.shape[0])
+
     ####################################################
-    
+    print("creating indexing ...")
     gpu_index.add(vid_long)              # add vectors to the index
     print("total indexing \t",gpu_index.ntotal)
-    return vid_long_all
+    return vid_long_all[:,0:2]
 
 
 # 生成新的子数据集
@@ -81,13 +75,6 @@ def matching_frame(vid_long_all, save_root="/root/Fred_wu/Code/multigrain", data
     print("short video preprocessing: \t")
     vid_short_all_total = extract_embd(osp.join(data_root, vid_short_nm))
 
-    str_match_rst_path = osp.join(save_root, match_rst)
-    # os.chdir(save_root)
-    if not os.path.exists(str_match_rst_path):
-        os.system("mkdir -p {}".format(str_match_rst_path))
-    else:
-        os.system("rm {}/*jpg".format(str_match_rst_path))
-    # os.system("cd -")
     step = 1000
 
     # black frame 
@@ -155,32 +142,29 @@ def matching_frame(vid_long_all, save_root="/root/Fred_wu/Code/multigrain", data
 if __name__ == "__main__":
     data_root = "/devdata/videos/"
     save_root = "/root/Fred_wu/Code/multigrain"
-    long_vid_nm='long_s6_h125.txt'
-    vid_short_nm='short33_125.txt'
+    long_vid_nm='long_s5_h125.txt'
+    vid_short_nm='short6_125.txt'
 
+    #--------------------------create needed folders --------------------------
     match_rst = long_vid_nm.split('.')[0] + '_' + vid_short_nm.split('.')[0]
+    str_match_rst_path = osp.join(save_root, match_rst)
+    # os.chdir(save_root)
+    if not os.path.exists(str_match_rst_path):
+        os.system("mkdir -p {}".format(str_match_rst_path))
+    else:
+        os.system("rm {}/*jpg".format(str_match_rst_path))
 
+    #--------------------------create gpu indexing --------------------------
     ngpus = faiss.get_num_gpus()
-    print("number of GPUs:", ngpus)
+    print("number of GPUs:\t", ngpus)
 
     cpu_index = faiss.IndexFlatL2(2048)
     gpu_index = faiss.index_cpu_to_all_gpus(cpu_index)
 
-    # embedding_dir = "/home/meizi/"
+
     vid_long_all = create_indexing(data_root=data_root, long_vid_nm=long_vid_nm)
 
     matching_frame(vid_long_all=vid_long_all, save_root=save_root, data_root=data_root,vid_short_nm=vid_short_nm, match_rst = match_rst)
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -193,14 +177,13 @@ if __name__ == "__main__":
 
 # yy = np.loadtxt('black_frames.txt', dtype=np.float32, delimiter=",")
 # temp_list=list(yy)
-
 # print("length of black frame\t", len(temp_list))
 
-# def add_black_frame(vid, fid, vid_long_all=vid_long_all):
-#     global temp_list
-#     tensor_black = vid_long_all[np.logical_and(vid_long_all[:, 0] == int(vid), vid_long_all[:, 1] == int(fid))][:,2:]
-#     temp_list.append(tensor_black[0])
+def add_black_frame(vid, fid, vid_long_all=vid_long_all):
+    global temp_list
+    tensor_black = vid_long_all[np.logical_and(vid_long_all[:, 0] == int(vid), vid_long_all[:, 1] == int(fid))][:,2:]
+    temp_list.append(tensor_black[0])
 
-#     black_frames = np.asanyarray(temp_list).reshape(len(temp_list), 2048)
-#     np.savetxt(u'black_frames.txt', black_frames, fmt='%.8e', delimiter=",")
+    black_frames = np.asanyarray(temp_list).reshape(len(temp_list), 2048)
+    np.savetxt(u'black_frames.txt', black_frames, fmt='%.8e', delimiter=",")
 

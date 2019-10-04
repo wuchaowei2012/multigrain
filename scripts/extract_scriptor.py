@@ -201,7 +201,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_distractors', default=0, type=int, help='number of distractor images.')
     parser.add_argument('--preload-dir-imagenet', default=None,
                         help='preload imagenet in this directory (useful for slow networks')
-    parser.add_argument('--workers', default=0, type=int, help='number of data-fetching workers')
+    parser.add_argument('--workers', default=5, type=int, help='number of data-fetching workers')
     parser.add_argument('--dry', action='store_true', help='do not store anything')
     parser.add_argument('--embeddingFilePath', default='/home/meizi/short1_125.txt', help='embedding file')
     parser.add_argument('--starts', default='1', help='dataset filtering')
