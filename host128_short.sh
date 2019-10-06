@@ -1,0 +1,9 @@
+./start_extract_descriptor.sh 1 /nfs/nfs128/videos/short_video_pic 1  /devdata/videos/short_s1_h128.txt
+./start_extract_descriptor.sh 1 /nfs/nfs128/videos/short_video_pic 2  /devdata/videos/short_s2_h128.txt
+./start_extract_descriptor.sh 1 /nfs/nfs128/videos/short_video_pic 3  /devdata/videos/short_s3_h128.txt
+./start_extract_descriptor.sh 1 /nfs/nfs128/videos/short_video_pic 4  /devdata/videos/short_s4_h128.txt
+./start_extract_descriptor.sh 1 /nfs/nfs128/videos/short_video_pic 5  /devdata/videos/short_s5_h128.txt
+./start_extract_descriptor.sh 1 /nfs/nfs128/videos/short_video_pic 6  /devdata/videos/short_s6_h128.txt
+./start_extract_descriptor.sh 1 /nfs/nfs128/videos/short_video_pic 7  /devdata/videos/short_s7_h128.txt
+./start_extract_descriptor.sh 1 /nfs/nfs128/videos/short_video_pic 8  /devdata/videos/short_s8_h128.txt
+./start_extract_descriptor.sh 1 /nfs/nfs128/videos/short_video_pic 9  /devdata/videos/short_s9_h128.txt

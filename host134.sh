@@ -1,0 +1,9 @@
+#./start_extract_descriptor.sh 1 /nfs/nfs134/videos/long_video_pic 1  /devdata/videos/long_s1_h134.txt
+#./start_extract_descriptor.sh 1 /nfs/nfs134/videos/long_video_pic 2  /devdata/videos/long_s2_h134.txt
+#./start_extract_descriptor.sh 1 /nfs/nfs134/videos/long_video_pic 3  /devdata/videos/long_s3_h134.txt
+#./start_extract_descriptor.sh 1 /nfs/nfs134/videos/long_video_pic 4  /devdata/videos/long_s4_h134.txt
+#./start_extract_descriptor.sh 1 /nfs/nfs134/videos/long_video_pic 5  /devdata/videos/long_s5_h134.txt
+#./start_extract_descriptor.sh 1 /nfs/nfs134/videos/long_video_pic 6  /devdata/videos/long_s6_h134.txt
+#./start_extract_descriptor.sh 1 /nfs/nfs134/videos/long_video_pic 7  /devdata/videos/long_s7_h134.txt
+#./start_extract_descriptor.sh 1 /nfs/nfs134/videos/long_video_pic 8  /devdata/videos/long_s8_h134.txt
+#./start_extract_descriptor.sh 1 /nfs/nfs134/videos/long_video_pic 9  /devdata/videos/long_s9_h134.txt

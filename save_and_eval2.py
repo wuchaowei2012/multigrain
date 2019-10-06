@@ -27,14 +27,15 @@ class MmapVectorUtils:
 
 
 def extract_embd(str_path):
-    vid_embedding = np.memmap(str_path, dtype='float16', mode='r', shape=None)
-    # vid_embedding = np.memmap(str_path, dtype='float32', mode='r', shape=None)
+    # vid_embedding = np.memmap(str_path, dtype='float16', mode='r', shape=None)
+    vid_embedding = np.memmap(str_path, dtype='float32', mode='r', shape=None)
     vid_embedding = vid_embedding.reshape(-1, 2050)
     print("\t---- total rows: \t", vid_embedding.shape[0])
     
     vid_embedding = vid_embedding[vid_embedding[:,0] != 0]
     print("\t---- valid rows: \t", vid_embedding.shape[0])
-    return vid_embedding
+
+    return vid_embedding#.astype(np.float16)
 
 
 ########################## 更改代码处 ##########################
@@ -142,8 +143,8 @@ def matching_frame(vid_long_all, save_root="/root/Fred_wu/Code/multigrain", data
 if __name__ == "__main__":
     data_root = "/devdata/videos/"
     save_root = "/root/Fred_wu/Code/multigrain"
-    long_vid_nm='long_s5_h125.txt'
-    vid_short_nm='short6_125.txt'
+    long_vid_nm='long_s6_h125.txt'
+    vid_short_nm='short_s6_h125.txt'
 
     #--------------------------create needed folders --------------------------
     match_rst = long_vid_nm.split('.')[0] + '_' + vid_short_nm.split('.')[0]
