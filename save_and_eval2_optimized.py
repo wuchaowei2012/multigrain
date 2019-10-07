@@ -5,8 +5,13 @@ from PIL import Image
 import os.path as osp
 
 import itertools
-
 from multiprocessing.pool import Pool
+
+
+dict_host = {
+        'h125': "/devdata/videos/", 'h128' : '/nfs/nfs128/videos', 'h129':'/nfs/nfs129/videos', 'h130':'/nfs/nfs130/videos', \
+        'h131':'/nfs/nfs131/videos', 'h132':'/nfs/nfs132/videos', 'h133':'/nfs/nfs133/videos', 'h134':'/nfs/nfs134/videos',\
+        'h135':'/nfs/nfs135/videos'}
 
 
 class MmapVectorUtils:
@@ -41,8 +46,6 @@ def extract_embd(str_path):
     return vid_embedding#.astype(np.float16)
 
 
-########################## 更改代码处 ##########################
-
 def create_indexing(gpu_index, embding_data_root="/devdata/videos", long_vid_nm='long_s6_h125.txt'):
     # global gpu_index
     # embding_data_root, default long video type
@@ -59,20 +62,25 @@ def create_indexing(gpu_index, embding_data_root="/devdata/videos", long_vid_nm=
 
 
 ########################## 更改代码处 ##########################
-def matching_frame(gpu_index, vid_long_all, save_root,data_root_long, data_root_short, \
-    vid_short_nm, match_rst = 'temp', embding_data_root="/devdata/videos"):
+# data_root_long, data_root_short, embding_data_root, vid_short_nm , 读取文件
+# save_root 保存路径
+
+def matching_frame(gpu_index, vid_long_all, embding_data_root, vid_short_nm, data_root_long, \
+    data_root_short, save_root,  match_rst = 'temp'):
     # global gpu_index
+    # 从这两个文件夹处读取数据
+    # embding_data_root="/devdata/videos"
 
     path_long = osp.join(data_root_long, "long_video_pic")
     path_short = osp.join(data_root_short, "short_video_pic")
 
-    print("short video preprocessing: \t")
-    vid_short_all_total = extract_embd(osp.join(embding_data_root, vid_short_nm))
+    # black frame 
+    black_frame = np.loadtxt('black_frames.txt', dtype=np.float32, delimiter=",")
 
     step = 1000
 
-    # black frame 
-    black_frame = np.loadtxt('black_frames.txt', dtype=np.float32, delimiter=",")
+    print("short video preprocessing: \t")
+    vid_short_all_total = extract_embd(osp.join(embding_data_root, vid_short_nm))
 
     counts_show = 0
 
@@ -106,8 +114,6 @@ def matching_frame(gpu_index, vid_long_all, save_root,data_root_long, data_root_
             short_path_a = osp.join(osp.join(path_short, str(int(short_vid))), str(int(short_fid)).rjust(5, '0') + '.jpg')
 
             ########################################################################3
-            # rel_im = Image.open(long_path_a)
-            # cal_im = Image.open(short_path_a)
             path_save = osp.join(save_root, match_rst)
 
             save_nm_long = "{}_long_vid_{}_{}_{}.jpg".format(counts_show, long_vid,long_fid,d0)
@@ -115,11 +121,6 @@ def matching_frame(gpu_index, vid_long_all, save_root,data_root_long, data_root_
 
             os.system("cp {} {}/{}".format(long_path_a, path_save,save_nm_long))
             os.system("cp {} {}/{}".format(short_path_a, path_save, save_nm_short))
-            
-            # rel_im.save('{}/{}/{}_real_picture_{}_{}_{}.jpg'.\
-            #     format(save_root, match_rst,counts_show, long_vid,long_fid,d0))
-            # cal_im.save('{}/{}/{}_short_vid_{}.jpg'.\
-            #     format(save_root,match_rst, counts_show, d0))
 
             counts_show+=1
 
@@ -132,57 +133,26 @@ def matching_frame(gpu_index, vid_long_all, save_root,data_root_long, data_root_
         print('*' * 100)
 
 
-def match_long_short(tuple_long_short):
-    str_long = tuple_long_short[0]
-    str_short = tuple_long_short[1]
-
-    print("str_long:\t", str_long, '\t', "str_short:\t", str_short)
-
-    str_host_long = str_long.split('_')[-1].split('.')[0] 
-    str_host_short = str_short.split('_')[-1].split('.')[0] 
-
-    dict_host = {
-        'h125': "/devdata/videos/", 'h128' : '/nfs/nfs128/videos', 'h129':'/nfs/nfs129/videos', 'h130':'/nfs/nfs130/videos', \
-        'h131':'/nfs/nfs131/videos', 'h132':'/nfs/nfs132/videos', 'h133':'/nfs/nfs133/videos', 'h134':'/nfs/nfs134/videos',\
-        'h135':'/nfs/nfs135/videos'
-    }
-
-    data_root_long = dict_host.get(str_host_long)
-    data_root_short = dict_host.get(str_host_short)
-
+def match_long_short(tuple_long_shortlist):
     embding_data_root = "/devdata/videos/"
-
-    # long_s1_h131
     save_root = "/devdata/videos/match_rst"
 
-    long_vid_nm=str_long
-    vid_short_nm=str_short
+    long_vid_nm = tuple_long_shortlist[0]
+    list_short = tuple_long_shortlist[1]
 
-    if os.path.getsize(os.path.join(embding_data_root, str_long)) == 0:
-        print("long embedding file size 0kb\t", os.path.join(embding_data_root, str_long))
+    str_host_long = long_vid_nm.split('_')[-1].split('.')[0]
+    data_root_long = dict_host.get(str_host_long)
+
+    # 检验long_vid embding rst quality
+    if os.path.getsize(os.path.join(embding_data_root, long_vid_nm)) == 0:
+        print("long embedding file size 0kb\t", os.path.join(embding_data_root, long_vid_nm))
         return
     else:
-        print("long embedding file size \t", os.path.join(embding_data_root, str_long), '\t', \
-        os.path.getsize(os.path.join(embding_data_root, str_long)))
-
-    if os.path.getsize(os.path.join(embding_data_root, str_short)) == 0:
-        print("short embedding file size 0kb\t", os.path.join(embding_data_root, str_short))
-        return
-    else:
-        print("short embedding file size \t", os.path.join(embding_data_root, str_short), '\t', \
-        os.path.getsize(os.path.join(embding_data_root, str_short)))
-
-    #--------------------------create needed folders --------------------------
-    match_rst = long_vid_nm.split('.')[0] + '_' + vid_short_nm.split('.')[0]
-    str_match_rst_path = osp.join(save_root, match_rst)
-    # os.chdir(save_root)
-    if not os.path.exists(str_match_rst_path):
-        os.system("mkdir -p {}".format(str_match_rst_path))
-    else:
-        #os.system("rm {}/*jpg".format(str_match_rst_path))
-        return
+        print("long embedding file size \t", os.path.join(embding_data_root, long_vid_nm), '\t', \
+        os.path.getsize(os.path.join(embding_data_root, long_vid_nm)))
 
     #--------------------------create gpu indexing --------------------------
+    # --------------------------once for a list of short video----------------------
     ngpus = faiss.get_num_gpus()
     print("number of GPUs:\t", ngpus)
 
@@ -191,8 +161,36 @@ def match_long_short(tuple_long_short):
 
     vid_long_all = create_indexing(gpu_index, embding_data_root=embding_data_root, long_vid_nm=long_vid_nm)
 
-    matching_frame(gpu_index, vid_long_all=vid_long_all, save_root=save_root, data_root_long=data_root_long, data_root_short=data_root_short,\
-    vid_short_nm=vid_short_nm, match_rst = match_rst, embding_data_root=embding_data_root)
+    # long_vid_nm vid_short_nm 
+    # long_s6_h131.txt
+    for vid_short_nm in list_short:
+        str_host_short = vid_short_nm.split('_')[-1].split('.')[0] 
+        data_root_short = dict_host.get(str_host_short)
+
+        if os.path.getsize(os.path.join(embding_data_root, vid_short_nm)) == 0:
+            print("short embedding file size 0kb\t", os.path.join(embding_data_root, vid_short_nm))
+            return
+        else:
+            print("short embedding file size \t", os.path.join(embding_data_root, vid_short_nm), '\t', \
+            os.path.getsize(os.path.join(embding_data_root, vid_short_nm)))
+
+        #--------------------------create needed folders --------------------------
+        match_rst = long_vid_nm.split('.')[0] + '_' + vid_short_nm.split('.')[0]
+        str_match_rst_path = osp.join(save_root, match_rst)
+        # os.chdir(save_root)
+        if not os.path.exists(str_match_rst_path):
+            os.system("mkdir -p {}".format(str_match_rst_path))
+        else:
+            #os.system("rm {}/*jpg".format(str_match_rst_path))
+            return
+
+        matching_frame(gpu_index, vid_long_all=vid_long_all, embding_data_root=embding_data_root,\
+        vid_short_nm=vid_short_nm, data_root_long=data_root_long, data_root_short=data_root_short,\
+        save_root=save_root,  match_rst = match_rst)
+
+
+
+
 
 # with open('/home/Code/Code/multigrain/vid_embedding_multiGrain.txt/string_vid_embedding128.txt', 'w') as f:
 #     for idx in range(vid_embedding.shape[0]):
@@ -250,10 +248,16 @@ if __name__ == "__main__":
     'short_s9_h129.txt','short_s9_h130.txt','short_s9_h131.txt','short_s9_h132.txt','short_s9_h133.txt',\
     'short_s9_h134.txt','short_s9_h135.txt']
 
-    long_short_pair =list(itertools.product(list_long,list_short))
+    #long_short_pair =list(itertools.product(list_long,list_short))
 
-    long_short_pair.sort()
+    list_tuple_long_shortlist = [(long, list_short) for long in list_long]
 
-    p = Pool(processes=3)
+    for tuple_long_shortlist in list_tuple_long_shortlist:
+        print('-' * 100)
+        print (tuple_long_shortlist)
+        match_long_short(tuple_long_shortlist)
 
-    i = p.map(match_long_short, long_short_pair)
+    
+    # long_short_pair.sort()
+    # p = Pool(processes=3)
+    # i = p.map(match_long_short, long_short_pair)
