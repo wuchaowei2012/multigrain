@@ -142,7 +142,7 @@ def matching_frame(vid_long_all, save_root="/root/Fred_wu/Code/multigrain", data
 
 if __name__ == "__main__":
     data_root = "/devdata/videos/"
-    save_root = "/root/Fred_wu/Code/multigrain"
+    save_root = "/root/Fred_wu/multigrain_data/multigrain"
     long_vid_nm='long_s6_h125.txt'
     vid_short_nm='short_s6_h125.txt'
 
