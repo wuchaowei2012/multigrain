@@ -4,6 +4,10 @@ import faiss
 from PIL import Image
 import os.path as osp
 
+import itertools
+
+from multiprocessing.pool import Pool
+
 
 class MmapVectorUtils:
     @staticmethod
@@ -34,7 +38,6 @@ def extract_embd(str_path):
     
     vid_embedding = vid_embedding[vid_embedding[:,0] != 0]
     print("\t---- valid rows: \t", vid_embedding.shape[0])
-
     return vid_embedding#.astype(np.float16)
 
 
@@ -48,11 +51,12 @@ def extract_embd(str_path):
 #del vid_long_all1,  vid_long_all0
 
 
-def create_indexing(data_root="/devdata/videos", long_vid_nm='long_s6_h125.txt'):
-    global gpu_index
+def create_indexing(gpu_index, embding_data_root="/devdata/videos", long_vid_nm='long_s6_h125.txt'):
+    # global gpu_index
+    # embding_data_root, default long video type
     ####################################################
     print("long video preprocessing: \t")
-    vid_long_all = extract_embd(osp.join(data_root, long_vid_nm))
+    vid_long_all = extract_embd(osp.join(embding_data_root, long_vid_nm))
     vid_long = np.ascontiguousarray(vid_long_all[:, 2:])
 
     ####################################################
@@ -66,15 +70,15 @@ def create_indexing(data_root="/devdata/videos", long_vid_nm='long_s6_h125.txt')
 #xb = MmapVectorUtils.Open("/home/meizi/3_vid_embedding_multiGrain_1million.txt", True, shape=(1000000,2050))
 #xb[0:1000000,:] = vid_long_all[:1000000,:]
 ########################## 更改代码处 ##########################
-def matching_frame(vid_long_all, save_root="/root/Fred_wu/Code/multigrain", data_root="/devdata/videos/", \
-    vid_short_nm = 'short4_125.txt', match_rst = 'temp'):
-    global gpu_index
+def matching_frame(gpu_index, vid_long_all, save_root,data_root_long, data_root_short, \
+    vid_short_nm, match_rst = 'temp', embding_data_root="/devdata/videos"):
+    # global gpu_index
 
-    path_long = osp.join(data_root, "long_video_pic")
-    path_short = osp.join(data_root, "short_video_pic")
+    path_long = osp.join(data_root_long, "long_video_pic")
+    path_short = osp.join(data_root_short, "short_video_pic")
 
     print("short video preprocessing: \t")
-    vid_short_all_total = extract_embd(osp.join(data_root, vid_short_nm))
+    vid_short_all_total = extract_embd(osp.join(embding_data_root, vid_short_nm))
 
     step = 1000
 
@@ -140,11 +144,45 @@ def matching_frame(vid_long_all, save_root="/root/Fred_wu/Code/multigrain", data
         print('*' * 100)
 
 
-if __name__ == "__main__":
-    data_root = "/devdata/videos/"
+def match_long_short(tuple_long_short):
+    str_long = tuple_long_short[0]
+    str_short = tuple_long_short[1]
+
+    print("str_long:\t", str_long, '\t', "str_short:\t", str_short)
+
+    str_host_long = str_long.split('_')[-1].split('.')[0] 
+    str_host_short = str_short.split('_')[-1].split('.')[0] 
+
+    dict_host = {
+        'h125': "/devdata/videos/", 'h128' : '/nfs/nfs128/videos', 'h129':'/nfs/nfs129/videos', 'h130':'/nfs/nfs130/videos', \
+        'h131':'/nfs/nfs131/videos', 'h132':'/nfs/nfs132/videos', 'h133':'/nfs/nfs133/videos', 'h134':'/nfs/nfs134/videos',\
+        'h135':'/nfs/nfs135/videos'
+    }
+
+    data_root_long = dict_host.get(str_host_long)
+    data_root_short = dict_host.get(str_host_short)
+
+    embding_data_root = "/devdata/videos/"
+
+    # long_s1_h131
     save_root = "/root/Fred_wu/multigrain_data/multigrain"
-    long_vid_nm='long_s6_h125.txt'
-    vid_short_nm='short_s6_h125.txt'
+
+    long_vid_nm=str_long
+    vid_short_nm=str_short
+
+    if os.path.getsize(os.path.join(embding_data_root, str_long)) == 0:
+        print("long embedding file size 0kb\t", os.path.join(embding_data_root, str_long))
+        return
+    else:
+        print("long embedding file size \t", os.path.join(embding_data_root, str_long), '\t', \
+        os.path.getsize(os.path.join(embding_data_root, str_long)))
+
+    if os.path.getsize(os.path.join(embding_data_root, str_short)) == 0:
+        print("short embedding file size 0kb\t", os.path.join(embding_data_root, str_short))
+        return
+    else:
+        print("short embedding file size \t", os.path.join(embding_data_root, str_short), '\t', \
+        os.path.getsize(os.path.join(embding_data_root, str_short)))
 
     #--------------------------create needed folders --------------------------
     match_rst = long_vid_nm.split('.')[0] + '_' + vid_short_nm.split('.')[0]
@@ -153,7 +191,8 @@ if __name__ == "__main__":
     if not os.path.exists(str_match_rst_path):
         os.system("mkdir -p {}".format(str_match_rst_path))
     else:
-        os.system("rm {}/*jpg".format(str_match_rst_path))
+        #os.system("rm {}/*jpg".format(str_match_rst_path))
+        return
 
     #--------------------------create gpu indexing --------------------------
     ngpus = faiss.get_num_gpus()
@@ -162,13 +201,10 @@ if __name__ == "__main__":
     cpu_index = faiss.IndexFlatL2(2048)
     gpu_index = faiss.index_cpu_to_all_gpus(cpu_index)
 
+    vid_long_all = create_indexing(gpu_index, embding_data_root=embding_data_root, long_vid_nm=long_vid_nm)
 
-    vid_long_all = create_indexing(data_root=data_root, long_vid_nm=long_vid_nm)
-
-    matching_frame(vid_long_all=vid_long_all, save_root=save_root, data_root=data_root,vid_short_nm=vid_short_nm, match_rst = match_rst)
-
-
-
+    matching_frame(gpu_index, vid_long_all=vid_long_all, save_root=save_root, data_root_long=data_root_long, data_root_short=data_root_short,\
+    vid_short_nm=vid_short_nm, match_rst = match_rst, embding_data_root=embding_data_root)
 
 # with open('/home/Code/Code/multigrain/vid_embedding_multiGrain.txt/string_vid_embedding128.txt', 'w') as f:
 #     for idx in range(vid_embedding.shape[0]):
@@ -180,11 +216,65 @@ if __name__ == "__main__":
 # temp_list=list(yy)
 # print("length of black frame\t", len(temp_list))
 
-def add_black_frame(vid, fid, vid_long_all=vid_long_all):
-    global temp_list
-    tensor_black = vid_long_all[np.logical_and(vid_long_all[:, 0] == int(vid), vid_long_all[:, 1] == int(fid))][:,2:]
-    temp_list.append(tensor_black[0])
+# def add_black_frame(vid, fid, vid_long_all):
+#     global temp_list
+#     tensor_black = vid_long_all[np.logical_and(vid_long_all[:, 0] == int(vid), vid_long_all[:, 1] == int(fid))][:,2:]
+#     temp_list.append(tensor_black[0])
 
-    black_frames = np.asanyarray(temp_list).reshape(len(temp_list), 2048)
-    np.savetxt(u'black_frames.txt', black_frames, fmt='%.8e', delimiter=",")
+#     black_frames = np.asanyarray(temp_list).reshape(len(temp_list), 2048)
+#     np.savetxt(u'black_frames.txt', black_frames, fmt='%.8e', delimiter=",")
+
+if __name__ == "__main__":
+    # ngpus = faiss.get_num_gpus()
+    # print("number of GPUs:\t", ngpus)
+
+    # cpu_index = faiss.IndexFlatL2(2048)
+    # gpu_index = faiss.index_cpu_to_all_gpus(cpu_index)
+
+    list_long = ['long_s1_h125.txt','long_s1_h128.txt','long_s1_h129.txt','long_s1_h130.txt',\
+    'long_s1_h131.txt','long_s1_h132.txt','long_s1_h133.txt','long_s1_h134.txt','long_s1_h135.txt',\
+    'long_s2_h125.txt','long_s2_h128.txt','long_s2_h129.txt','long_s2_h130.txt','long_s2_h131.txt',\
+    'long_s2_h132.txt','long_s2_h133.txt','long_s2_h134.txt','long_s2_h135.txt','long_s3_h125.txt',\
+    'long_s3_h128.txt','long_s3_h129.txt','long_s3_h130.txt','long_s3_h131.txt','long_s3_h132.txt',\
+    'long_s3_h133.txt','long_s3_h134.txt','long_s3_h135.txt','long_s4_h125.txt','long_s4_h128.txt',\
+    'long_s4_h129.txt','long_s4_h130.txt','long_s4_h131.txt','long_s4_h132.txt','long_s4_h133.txt',\
+    'long_s4_h134.txt','long_s4_h135.txt','long_s5_h125.txt','long_s5_h128.txt','long_s5_h129.txt',\
+    'long_s5_h130.txt','long_s5_h131.txt','long_s5_h132.txt','long_s5_h133.txt','long_s5_h134.txt',\
+    'long_s5_h135.txt','long_s6_h125.txt','long_s6_h128.txt','long_s6_h129.txt','long_s6_h130.txt',\
+    'long_s6_h131.txt','long_s6_h132.txt','long_s6_h133.txt','long_s6_h134.txt','long_s6_h135.txt',\
+    'long_s7_h125.txt','long_s7_h128.txt','long_s7_h129.txt','long_s7_h130.txt','long_s7_h131.txt',\
+    'long_s7_h132.txt','long_s7_h133.txt','long_s7_h134.txt','long_s7_h135.txt','long_s8_h125.txt',\
+    'long_s8_h128.txt','long_s8_h129.txt','long_s8_h130.txt','long_s8_h131.txt','long_s8_h132.txt',\
+    'long_s8_h133.txt','long_s8_h134.txt','long_s8_h135.txt','long_s9_h125.txt','long_s9_h128.txt',\
+    'long_s9_h129.txt','long_s9_h130.txt','long_s9_h131.txt','long_s9_h132.txt','long_s9_h133.txt',\
+    'long_s9_h134.txt','long_s9_h135.txt']
+
+    list_short=['short_s1_h125.txt','short_s1_h128.txt','short_s1_h129.txt','short_s1_h130.txt',\
+    'short_s1_h131.txt','short_s1_h132.txt','short_s1_h133.txt','short_s1_h134.txt','short_s1_h135.txt',\
+    'short_s2_h125.txt','short_s2_h128.txt','short_s2_h129.txt','short_s2_h130.txt','short_s2_h131.txt',\
+    'short_s2_h132.txt','short_s2_h133.txt','short_s2_h134.txt','short_s2_h135.txt','short_s3_h125.txt',\
+    'short_s3_h128.txt','short_s3_h129.txt','short_s3_h130.txt','short_s3_h131.txt','short_s3_h132.txt',\
+    'short_s3_h133.txt','short_s3_h134.txt','short_s3_h135.txt','short_s4_h125.txt','short_s4_h128.txt',\
+    'short_s4_h129.txt','short_s4_h130.txt','short_s4_h131.txt','short_s4_h132.txt','short_s4_h133.txt',\
+    'short_s4_h134.txt','short_s4_h135.txt','short_s5_h125.txt','short_s5_h128.txt','short_s5_h129.txt',\
+    'short_s5_h130.txt','short_s5_h131.txt','short_s5_h132.txt','short_s5_h133.txt','short_s5_h134.txt',\
+    'short_s5_h135.txt','short_s6_h125.txt','short_s6_h128.txt','short_s6_h129.txt','short_s6_h130.txt',\
+    'short_s6_h131.txt','short_s6_h132.txt','short_s6_h133.txt','short_s6_h134.txt','short_s6_h135.txt',\
+    'short_s7_h125.txt','short_s7_h128.txt','short_s7_h129.txt','short_s7_h130.txt','short_s7_h131.txt',\
+    'short_s7_h132.txt','short_s7_h133.txt','short_s7_h134.txt','short_s7_h135.txt','short_s8_h125.txt',\
+    'short_s8_h128.txt','short_s8_h129.txt','short_s8_h130.txt','short_s8_h131.txt','short_s8_h132.txt',\
+    'short_s8_h133.txt','short_s8_h134.txt','short_s8_h135.txt','short_s9_h125.txt','short_s9_h128.txt',\
+    'short_s9_h129.txt','short_s9_h130.txt','short_s9_h131.txt','short_s9_h132.txt','short_s9_h133.txt',\
+    'short_s9_h134.txt','short_s9_h135.txt']
+
+
+    long_short_pair =list(itertools.product(list_long,list_short))
+
+    long_short_pair.sort()
+
+    p = Pool(processes=6)
+
+    i = p.map(match_long_short, long_short_pair)
+
+
 
