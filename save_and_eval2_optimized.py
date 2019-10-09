@@ -41,8 +41,8 @@ def extract_embd(str_path):
     vid_embedding = vid_embedding.reshape(-1, 2050)
     print("\t---- total rows: \t", vid_embedding.shape[0])
     
-    vid_embedding = vid_embedding[vid_embedding[:,0] != 0]
-    print("\t---- valid rows: \t", vid_embedding.shape[0])
+    # vid_embedding = vid_embedding[vid_embedding[:,0] != 0]
+    # print("\t---- valid rows: \t", vid_embedding.shape[0])
     return vid_embedding#.astype(np.float16)
 
 
@@ -90,7 +90,7 @@ def matching_frame(gpu_index, vid_long_all, embding_data_root, vid_short_nm, dat
 
         print("will search based on indexing", m * step, (m + 1) * step)
 
-        D, I = gpu_index.search(vid_short, k = 5) # sanity check
+        D, I = gpu_index.search(vid_short, k = 1) # sanity check
 
         # 统计 D
         temp = D[:,0]
@@ -112,12 +112,11 @@ def matching_frame(gpu_index, vid_long_all, embding_data_root, vid_short_nm, dat
                 continue
             long_path_a = osp.join(osp.join(path_long, str(int(long_vid))), str(int(long_fid)).rjust(5, '0') + '.jpg')
             short_path_a = osp.join(osp.join(path_short, str(int(short_vid))), str(int(short_fid)).rjust(5, '0') + '.jpg')
-
             ########################################################################3
             path_save = osp.join(save_root, match_rst)
 
-            save_nm_long = "{}_long_vid_{}_{}_{}.jpg".format(counts_show, long_vid,long_fid,d0)
-            save_nm_short = "{}_short_vid_{}.jpg".format(counts_show, d0)
+            save_nm_long = "{}_l_{}_{}_{}.jpg".format(counts_show, long_vid,long_fid,d0)
+            save_nm_short = "{}_s_{}_{}_{}.jpg".format(counts_show, short_vid,short_fid, d0)
 
             os.system("cp {} {}/{}".format(long_path_a, path_save,save_nm_long))
             os.system("cp {} {}/{}".format(short_path_a, path_save, save_nm_short))
@@ -134,6 +133,9 @@ def matching_frame(gpu_index, vid_long_all, embding_data_root, vid_short_nm, dat
 
 
 def match_long_short(tuple_long_shortlist):
+    print('-' * 100)
+    print (tuple_long_shortlist)
+
     embding_data_root = "/devdata/videos/"
     save_root = "/devdata/videos/match_rst"
 
@@ -142,6 +144,10 @@ def match_long_short(tuple_long_shortlist):
 
     str_host_long = long_vid_nm.split('_')[-1].split('.')[0]
     data_root_long = dict_host.get(str_host_long)
+
+    # 检查文件是否存在
+    if not os.path.exists(os.path.join(embding_data_root, long_vid_nm)):
+        return
 
     # 检验long_vid embding rst quality
     if os.path.getsize(os.path.join(embding_data_root, long_vid_nm)) == 0:
@@ -164,6 +170,9 @@ def match_long_short(tuple_long_shortlist):
     # long_vid_nm vid_short_nm 
     # long_s6_h131.txt
     for vid_short_nm in list_short:
+        if not os.path.exists(os.path.join(embding_data_root, vid_short_nm)):
+            continue
+
         str_host_short = vid_short_nm.split('_')[-1].split('.')[0] 
         data_root_short = dict_host.get(str_host_short)
 
@@ -187,9 +196,6 @@ def match_long_short(tuple_long_shortlist):
         matching_frame(gpu_index, vid_long_all=vid_long_all, embding_data_root=embding_data_root,\
         vid_short_nm=vid_short_nm, data_root_long=data_root_long, data_root_short=data_root_short,\
         save_root=save_root,  match_rst = match_rst)
-
-
-
 
 
 # with open('/home/Code/Code/multigrain/vid_embedding_multiGrain.txt/string_vid_embedding128.txt', 'w') as f:
@@ -248,16 +254,16 @@ if __name__ == "__main__":
     'short_s9_h129.txt','short_s9_h130.txt','short_s9_h131.txt','short_s9_h132.txt','short_s9_h133.txt',\
     'short_s9_h134.txt','short_s9_h135.txt']
 
-    #long_short_pair =list(itertools.product(list_long,list_short))
+    # long_short_pair =list(itertools.product(list_long,list_short))
 
     list_tuple_long_shortlist = [(long, list_short) for long in list_long]
 
-    for tuple_long_shortlist in list_tuple_long_shortlist:
-        print('-' * 100)
-        print (tuple_long_shortlist)
-        match_long_short(tuple_long_shortlist)
+    # for tuple_long_shortlist in list_tuple_long_shortlist:
+    #     print('-' * 100)
+    #     print (tuple_long_shortlist)
+    #     match_long_short(tuple_long_shortlist)
 
     
-    # long_short_pair.sort()
-    # p = Pool(processes=3)
-    # i = p.map(match_long_short, long_short_pair)
+    list_tuple_long_shortlist.sort()
+    p = Pool(processes=3)
+    i = p.map(match_long_short, list_tuple_long_shortlist)
