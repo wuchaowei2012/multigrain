@@ -111,14 +111,14 @@ list_long = [
 ]
 
 # long_s4_h130.txt 可能有bug 
-
+os.chdir("/devdata/videos")
 for filePath in list_long:
 
     if os.path.getsize(filePath) == 0:
         continue
     try:
-        FilterOutEmptyVector(filePath, 2050, backup=True)
+        FilterOutEmptyVector(filePath, 2050, backup=False)
 
-        Merger("LongVideo.vec", filePath, deleteAfterMeger=True)
+        Merger("LongVideo.vec", filePath, deleteAfterMeger=False)
     except:
-        print("error \t",filePath)
+        print("error \t",filePath) 
