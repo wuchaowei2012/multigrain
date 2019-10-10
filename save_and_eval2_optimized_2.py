@@ -60,6 +60,7 @@ dict_host = {
 
 
 # str_path='/devdata/videos/match_rst/asssemble_rst1.txt'
+# temp = extract_embd(str_path,5) 
 
 def extract_embd(str_path, ndim=2050):
     # vid_embedding = np.memmap(str_path, dtype='float16', mode='r', shape=None)
@@ -150,11 +151,14 @@ def matching_frame(gpu_index, vid_long_all, embding_data_root, vid_short_nm, dat
 
         temp_0 = vid_short_all[:, 2:]
 
-        def is_valid_frame(shortemb):
-            return not np.sum(np.sum(np.square(shortemb - black_frame), axis = 1) < 0.03 * 0.5) > 0
+        # def is_valid_frame(shortemb):
+        #     return not np.sum(np.sum(np.square(shortemb - black_frame), axis = 1) < 0.03 * 0.5) > 0
 
         def is_valid_frame_new(short):
-            return not np.sum(np.sum(np.square(short[-1] - black_frame), axis = 1) < 0.03 * 0.5) > 0
+            try:
+                return not np.sum(np.sum(np.square(short[-1] - black_frame), axis = 1) < 0.03 * 0.5) > 0
+            except:
+                return True
 
         filter_bool = parmap.map(is_valid_frame_new, temp_0, pm_processes=4)
 

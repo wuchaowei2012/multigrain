@@ -92,9 +92,10 @@ def split_giant_new(filePath, dim):
 # 生成新的子数据集
 
 embding_data_root = "/devdata/videos/"
-str_file_nm="ShortVideo.vec"
+str_file_nm="LongVideo.vec"
 path_giant_file = os.path.join(embding_data_root, str_file_nm)
 
+ShortVideo
 
 split_giant_new(path_giant_file, 2050)
 
