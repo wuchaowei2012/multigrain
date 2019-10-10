@@ -103,6 +103,8 @@ def split_giant_new(filePath, dim, ends_digit):
     print("total count which ends with {}: \t {} ".format(ends_digit, count))
 
     tempFileName = filePath.split('.')[0] + "_part" + str(ends_digit)
+
+    # def Read(path, dim, copyToMemory = False)
     xd1 = MmapVectorUtils.Open(tempFileName, True, (count, dim))
     
     j = 0
@@ -164,17 +166,12 @@ def split_giant_new(filePath, dim, ends_digit):
 # 生成新的子数据集
 
 embding_data_root = "/devdata/videos/"
-str_file_nm="long_s4_h132.txt"
+str_file_nm="long_s4_h133.txt"
 path_giant_file = os.path.join(embding_data_root, str_file_nm)
 
 for ends_digit in range(10):
     # print("ends_digit:\t",ends_digit)
     split_giant_new(path_giant_file, 2050, ends_digit)
-
-
-
-
-
 
 
 
@@ -184,3 +181,17 @@ for ends_digit in range(10):
 #vid_long_all = np.memmap(vid_embedding_dir, dtype='float64', mode='r+', shape=(line_counts,2050))
 #vid_long_all[vid_long_all0.shape[0]:,:] = vid_long_all1
 #del vid_long_all1,  vid_long_all0
+
+
+# -rw-r--r--     1 root root   38G Oct  4 20:04 long_s3_h125.txt
+# -rw-r--r--     1 root root   37G Oct  7 00:59 long_s4_h132.txt
+# -rw-r--r--     1 root root   32G Oct  5 23:28 long_s3_h135.txt
+# -rw-r--r--     1 root root   29G Oct  5 23:24 long_s5_h129.txt
+# -rw-r--r--     1 root root   22G Oct  7 05:17 long_s6_h128.txt
+# -rw-r--r--     1 root root   22G Oct  5 13:53 long_s5_h130.txt
+
+# -rw-r--r--     1 root root   17G Oct  3 20:32 long_s5_h125.txt
+# -rw-r--r--     1 root root   14G Oct  6 18:23 long_s3_h128.txt
+# -rw-r--r--     1 root root   13G Oct  5 07:52 long_s4_h130.txt
+# -rw-r--r--     1 root root   12G Oct  5 07:51 long_s3_h130.txt
+# -rw-r--r--     1 root root   12G Oct  6 04:42 long_s4_h135.txt
