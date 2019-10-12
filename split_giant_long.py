@@ -42,33 +42,11 @@ class MmapVectorUtils:
         xb[offset:last, 2:] = vectors
 
 
-# def split_giant_new(filePath, dim, ends_digit):
-#     xi, fi,  xd = MmapVectorUtils.Read(filePath,dim)
-#     count = sum([1 for i in xi if i % 10 == ends_digit])
-#     print("total count which ends with {}: \t {} ".format(ends_digit, count))
-
-#     tempFileName = filePath.split('.')[0] + "_part" + str(ends_digit)
-
-#     # def Read(path, dim, copyToMemory = False)
-#     xd1 = MmapVectorUtils.Open(tempFileName, True, (count, dim))
-    
-#     j = 0
-#     for i in tqdm(range(count)):
-#         if ends_digit == xi[i] % 10:
-#             xd1[j,0] = xi[i]
-#             xd1[j,1] = fi[i]
-#             xd1[j,2:] = xd[i]
-#             j+=1
-
 def split_giant_new(filePath, dim):
     xi, fi,  xd = MmapVectorUtils.Read(filePath,dim)
 
-    file_length = 2000000
+    file_length = 1800000
     
-    # ends_digit = 0
-    # tempFileName = filePath.split('.')[0] + "_part" + str(ends_digit)
-    # xd1 = MmapVectorUtils.Open(tempFileName, True, (file_length, dim))    
-    # j  = 0
     ends_digit = -1
 
     for i in tqdm(range(xi.shape[0])):
@@ -79,9 +57,11 @@ def split_giant_new(filePath, dim):
             j+=1
         else:
             j = 0
+
             ends_digit = ends_digit + 1
             tempFileName = filePath.split('.')[0] + "_part" + str(ends_digit)
             xd1 = MmapVectorUtils.Open(tempFileName, True, (file_length, dim))
+            print("new file {}".format(tempFileName))
 
             xd1[j,0] = xi[i]
             xd1[j,1] = fi[i]
@@ -95,7 +75,6 @@ embding_data_root = "/devdata/videos/"
 str_file_nm="LongVideo.vec"
 path_giant_file = os.path.join(embding_data_root, str_file_nm)
 
-ShortVideo
 
 split_giant_new(path_giant_file, 2050)
 
