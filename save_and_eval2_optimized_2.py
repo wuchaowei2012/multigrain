@@ -110,7 +110,8 @@ def matching_frame(gpu_index, vid_long_all, embding_data_root, vid_short_nm, dat
 
     counts_show = 0
 
-    dst_file = "/devdata/videos/match_rst/asssemble_rst_total.txt"
+    # list_long = list_long[0:5]
+    dst_file = "/devdata/videos/match_rst/LongVideo_part0_4.txt"
 
     for m in tqdm(range(vid_short_all_total.shape[0] // step + 1)):
         
@@ -234,7 +235,9 @@ if __name__ == "__main__":
     'LongVideo_part35','LongVideo_part36','LongVideo_part37','LongVideo_part38','LongVideo_part4',\
     'LongVideo_part5','LongVideo_part6','LongVideo_part7','LongVideo_part8','LongVideo_part9']
 
-    list_long=list_long[2:]
+    # list_long = [item for item in list_long if item.startswith('LongVideo_part1')]
+    list_long = list_long[0:5]
+
 
     list_long.sort()
     print(list_long)
