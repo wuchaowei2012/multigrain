@@ -137,7 +137,6 @@ def matching_frame(gpu_index, vid_long_all, embding_data_root, vid_short_nm, dat
         # np1 = np0
         del np0
 
-
         rst = np1[np1[:, 0] < 0.03]
 
         with open(dst_file, 'ab') as fw:  # fr读文件
